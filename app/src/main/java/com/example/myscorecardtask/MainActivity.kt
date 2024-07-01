@@ -1,18 +1,15 @@
 package com.example.myscorecardtask
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
@@ -38,8 +35,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myscorecardtask.ui.theme.LightBlue
 import com.example.myscorecardtask.ui.theme.MyScoreCardTaskTheme
-import com.example.myscorecardtask.ui.theme.LightBlue
-import com.example.myscorecardtask.ui.theme.MyScoreCardTaskTheme
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -60,12 +55,27 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("PrivateResource")
 @Composable
 fun MyScorecardScreen(viewModel: ScoreCardViewModel = viewModel()) {
-    val selectedDate = viewModel.selectedDate
     val selectedFilter = viewModel.selectedFilter
     val filters = listOf("Company", "Area", "Region", "District", "State", "Country")
     val searchText = viewModel.searchText.collectAsState().value
+    val bottomSheetStateValue = viewModel.bottomSheetState.collectAsState().value
     val scope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val bottomSheetState = remember {
+        SheetState(
+
+            initialValue = SheetValue.Hidden,
+            skipPartiallyExpanded = true
+        )
+    }
+    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
+
+    LaunchedEffect(bottomSheetStateValue) {
+        if (bottomSheetStateValue == SheetValue.Hidden) {
+            bottomSheetState.hide()
+        } else {
+            bottomSheetState.expand()
+        }
+    }
 
     Spacer(modifier = Modifier.width(8.dp))
 
@@ -111,11 +121,11 @@ fun MyScorecardScreen(viewModel: ScoreCardViewModel = viewModel()) {
             DayButtons { show ->
                 if (show) {
                     scope.launch {
-                        scaffoldState.bottomSheetState.expand()
+                        viewModel.showBottomSheet()
                     }
                 } else {
                     scope.launch {
-                        scaffoldState.bottomSheetState.hide()
+                        viewModel.hideBottomSheet()
                     }
                 }
             }
